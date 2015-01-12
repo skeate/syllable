@@ -89,7 +89,7 @@
  * Dependencies.
  */
 
-var syllable = require('wooorm/syllable@0.1.2');
+var syllable = require('wooorm/syllable@0.1.3');
 
 /*
  * DOM elements.
@@ -126,7 +126,7 @@ $input.addEventListener('input', oninputchange);
 
 oninputchange();
 
-}, {"wooorm/syllable@0.1.2":2}],
+}, {"wooorm/syllable@0.1.3":2}],
 2: [function(require, module, exports) {
 'use strict';
 
