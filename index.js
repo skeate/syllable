@@ -4,7 +4,7 @@
  * Dependencies.
  */
 
-var syllable = require('wooorm/syllable@0.1.3');
+var syllable = require('wooorm/syllable@0.1.4');
 
 /*
  * DOM elements.

@@ -30,15 +30,18 @@
    */
 
   function call(id, require){
-    var m = cache[id] = { exports: {} };
+    var m = { exports: {} };
     var mod = modules[id];
     var name = mod[2];
     var fn = mod[0];
 
     fn.call(m.exports, function(req){
       var dep = modules[id][1][req];
-      return require(dep ? dep : req);
+      return require(dep || req);
     }, m, m.exports, outer, modules, cache, entries);
+
+    // store to cache after successful resolve
+    cache[id] = m;
 
     // expose as `name`.
     if (name) cache[name] = cache[id];
@@ -89,7 +92,7 @@
  * Dependencies.
  */
 
-var syllable = require('wooorm/syllable@0.1.3');
+var syllable = require('wooorm/syllable@0.1.4');
 
 /*
  * DOM elements.
@@ -126,7 +129,7 @@ $input.addEventListener('input', oninputchange);
 
 oninputchange();
 
-}, {"wooorm/syllable@0.1.3":2}],
+}, {"wooorm/syllable@0.1.4":2}],
 2: [function(require, module, exports) {
 'use strict';
 
@@ -134,40 +137,19 @@ oninputchange();
  * Dependencies.
  */
 
-var pluralize;
-
-pluralize = require('pluralize');
+var pluralize = require('pluralize');
 
 /*
  * A (small) map of problematic values.
  */
 
-var MAP_PROBLEMATIC;
-
-MAP_PROBLEMATIC = require('./data/problematic.json');
+var MAP_PROBLEMATIC = require('./data/problematic.json');
 
 /*
  * Cached methods.
  */
 
-var has;
-
-has = Object.prototype.hasOwnProperty;
-
-/*
- * Constant expressions.
- */
-
-var EXPRESSION_SINGLE,
-    EXPRESSION_DOUBLE,
-    EXPRESSION_TRIPLE,
-    EXPRESSION_NONALPHABETIC,
-    EXPRESSION_MONOSYLLABIC_ONE,
-    EXPRESSION_MONOSYLLABIC_TWO,
-    EXPRESSION_DOUBLE_SYLLABIC_ONE,
-    EXPRESSION_DOUBLE_SYLLABIC_TWO,
-    EXPRESSION_DOUBLE_SYLLABIC_THREE,
-    EXPRESSION_DOUBLE_SYLLABIC_FOUR;
+var has = Object.prototype.hasOwnProperty;
 
 /*
  * Two expressions of occurrences which normally would
@@ -175,7 +157,7 @@ var EXPRESSION_SINGLE,
  * as one.
  */
 
-EXPRESSION_MONOSYLLABIC_ONE = new RegExp(
+var EXPRESSION_MONOSYLLABIC_ONE = new RegExp(
     'cia(l|$)|' +
     'tia|' +
     'cius|' +
@@ -275,7 +257,7 @@ EXPRESSION_MONOSYLLABIC_ONE = new RegExp(
     'g'
 );
 
-EXPRESSION_MONOSYLLABIC_TWO = new RegExp(
+var EXPRESSION_MONOSYLLABIC_TWO = new RegExp(
     '[aeiouy]' +
     '(' +
         'b|' +
@@ -325,7 +307,7 @@ EXPRESSION_MONOSYLLABIC_TWO = new RegExp(
  * counted as one syllable, but should be counted as two.
  */
 
-EXPRESSION_DOUBLE_SYLLABIC_ONE = new RegExp(
+var EXPRESSION_DOUBLE_SYLLABIC_ONE = new RegExp(
     '(' +
         '(' +
             '[^aeiouy]' +
@@ -353,7 +335,7 @@ EXPRESSION_DOUBLE_SYLLABIC_ONE = new RegExp(
     'g'
 );
 
-EXPRESSION_DOUBLE_SYLLABIC_TWO = new RegExp(
+var EXPRESSION_DOUBLE_SYLLABIC_TWO = new RegExp(
     '[^gq]ua[^auieo]|' +
     '[aeiou]{3}|' +
     '^(' +
@@ -364,7 +346,7 @@ EXPRESSION_DOUBLE_SYLLABIC_TWO = new RegExp(
     'g'
 );
 
-EXPRESSION_DOUBLE_SYLLABIC_THREE = new RegExp(
+var EXPRESSION_DOUBLE_SYLLABIC_THREE = new RegExp(
     '[^aeiou]y[ae]|' +
     '[^l]lien|' +
     'riet|' +
@@ -380,13 +362,13 @@ EXPRESSION_DOUBLE_SYLLABIC_THREE = new RegExp(
     'g'
 );
 
-EXPRESSION_DOUBLE_SYLLABIC_FOUR = /[^s]ia/;
+var EXPRESSION_DOUBLE_SYLLABIC_FOUR = /[^s]ia/;
 
 /*
  * Expression to match single syllable pre- and suffixes.
  */
 
-EXPRESSION_SINGLE = new RegExp(
+var EXPRESSION_SINGLE = new RegExp(
     '^' +
     '(' +
         'un|' +
@@ -427,7 +409,7 @@ EXPRESSION_SINGLE = new RegExp(
  * Expression to match double syllable pre- and suffixes.
  */
 
-EXPRESSION_DOUBLE = new RegExp(
+var EXPRESSION_DOUBLE = new RegExp(
     '^' +
     '(' +
         'above|' +
@@ -468,14 +450,14 @@ EXPRESSION_DOUBLE = new RegExp(
  * Expression to match triple syllable suffixes.
  */
 
-EXPRESSION_TRIPLE = /(ology|ologist|onomy|onomist)$/g;
+var EXPRESSION_TRIPLE = /(ology|ologist|onomy|onomist)$/g;
 
 /*
  * Expression to remove non-alphabetic characters from
  * a given value.
  */
 
-EXPRESSION_NONALPHABETIC = /[^a-z]/g;
+var EXPRESSION_NONALPHABETIC = /[^a-z]/g;
 
 /**
  * Get syllables in a given value.
@@ -484,19 +466,17 @@ EXPRESSION_NONALPHABETIC = /[^a-z]/g;
  * @return {number}
  */
 function syllable(value) {
-    var iterator,
-        length,
-        singular,
-        count,
-        parts,
-        addOne,
-        subtractOne;
+    var count = 0;
+    var index;
+    var length;
+    var singular;
+    var parts;
+    var addOne;
+    var subtractOne;
 
     value = String(value)
         .toLowerCase()
         .replace(EXPRESSION_NONALPHABETIC, '');
-
-    count = 0;
 
     if (!value.length) {
         return count;
@@ -584,11 +564,11 @@ function syllable(value) {
      */
 
     parts = value.split(/[^aeiouy]+/);
-    iterator = -1;
+    index = -1;
     length = parts.length;
 
-    while (++iterator < length) {
-        if (parts[iterator] !== '') {
+    while (++index < length) {
+        if (parts[index] !== '') {
             count++;
         }
     }
@@ -876,6 +856,8 @@ module.exports = syllable;
     ['this',     'these'],
     ['that',     'those'],
     // Words ending in with a consonant and `o`.
+    ['echo', 'echoes'],
+    ['dingo', 'dingoes'],
     ['volcano', 'volcanoes'],
     ['tornado', 'tornadoes'],
     ['torpedo', 'torpedoes'],
