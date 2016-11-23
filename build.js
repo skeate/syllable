@@ -1,613 +1,86 @@
-(function outer(modules, cache, entries){
-
-  /**
-   * Global
-   */
-
-  var global = (function(){ return this; })();
-
-  /**
-   * Require `name`.
-   *
-   * @param {String} name
-   * @param {Boolean} jumped
-   * @api public
-   */
-
-  function require(name, jumped){
-    if (cache[name]) return cache[name].exports;
-    if (modules[name]) return call(name, require);
-    throw new Error('cannot find module "' + name + '"');
-  }
-
-  /**
-   * Call module `id` and cache it.
-   *
-   * @param {Number} id
-   * @param {Function} require
-   * @return {Function}
-   * @api private
-   */
-
-  function call(id, require){
-    var m = { exports: {} };
-    var mod = modules[id];
-    var name = mod[2];
-    var fn = mod[0];
-
-    fn.call(m.exports, function(req){
-      var dep = modules[id][1][req];
-      return require(dep || req);
-    }, m, m.exports, outer, modules, cache, entries);
-
-    // store to cache after successful resolve
-    cache[id] = m;
-
-    // expose as `name`.
-    if (name) cache[name] = cache[id];
-
-    return cache[id].exports;
-  }
-
-  /**
-   * Require all entries exposing them on global if needed.
-   */
-
-  for (var id in entries) {
-    if (entries[id]) {
-      global[entries[id]] = require(id);
-    } else {
-      require(id);
-    }
-  }
-
-  /**
-   * Duo flag.
-   */
-
-  require.duo = true;
-
-  /**
-   * Expose cache.
-   */
-
-  require.cache = cache;
-
-  /**
-   * Expose modules
-   */
-
-  require.modules = modules;
-
-  /**
-   * Return newest require.
-   */
-
-   return require;
-})({
-1: [function(require, module, exports) {
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-/*
- * Dependencies.
- */
-
-var syllable = require('wooorm/syllable@0.1.4');
-
-/*
- * DOM elements.
- */
+var syllable = require('syllable');
 
 var $input = document.getElementsByTagName('textarea')[0];
 var $output = document.getElementsByTagName('output')[0];
 
-/*
- * Helper.
- */
-
-function sum(a, b) {
-    return a + b;
-}
-
-/*
- * Handler.
- */
-
-function oninputchange() {
-    $output.textContent = $input.value.split(/\s+/g).map(syllable).reduce(sum);
-}
-
-/*
- * Attach handler.
- */
-
 $input.addEventListener('input', oninputchange);
-
-/*
- * Initial answer.
- */
 
 oninputchange();
 
-}, {"wooorm/syllable@0.1.4":2}],
-2: [function(require, module, exports) {
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var pluralize = require('pluralize');
-
-/*
- * A (small) map of problematic values.
- */
-
-var MAP_PROBLEMATIC = require('./data/problematic.json');
-
-/*
- * Cached methods.
- */
-
-var has = Object.prototype.hasOwnProperty;
-
-/*
- * Two expressions of occurrences which normally would
- * be counted as two syllables, but should be counted
- * as one.
- */
-
-var EXPRESSION_MONOSYLLABIC_ONE = new RegExp(
-    'cia(l|$)|' +
-    'tia|' +
-    'cius|' +
-    'cious|' +
-    '[^aeiou]giu|' +
-    '[aeiouy][^aeiouy]ion|' +
-    'iou|' +
-    'sia$|' +
-    'eous$|' +
-    '[oa]gue$|' +
-    '.[^aeiuoycgltdb]{2,}ed$|' +
-    '.ely$|' +
-    '^jua|' +
-    'uai|' +
-    'eau|' +
-    '^busi$|' +
-    '(' +
-        '[aeiouy]' +
-        '(' +
-            'b|' +
-            'c|' +
-            'ch|' +
-            'dg|' +
-            'f|' +
-            'g|' +
-            'gh|' +
-            'gn|' +
-            'k|' +
-            'l|' +
-            'lch|' +
-            'll|' +
-            'lv|' +
-            'm|' +
-            'mm|' +
-            'n|' +
-            'nc|' +
-            'ng|' +
-            'nch|' +
-            'nn|' +
-            'p|' +
-            'r|' +
-            'rc|' +
-            'rn|' +
-            'rs|' +
-            'rv|' +
-            's|' +
-            'sc|' +
-            'sk|' +
-            'sl|' +
-            'squ|' +
-            'ss|' +
-            'th|' +
-            'v|' +
-            'y|' +
-            'z' +
-        ')' +
-        'ed$' +
-    ')|' +
-    '(' +
-        '[aeiouy]' +
-        '(' +
-            'b|' +
-            'ch|' +
-            'd|' +
-            'f|' +
-            'gh|' +
-            'gn|' +
-            'k|' +
-            'l|' +
-            'lch|' +
-            'll|' +
-            'lv|' +
-            'm|' +
-            'mm|' +
-            'n|' +
-            'nch|' +
-            'nn|' +
-            'p|' +
-            'r|' +
-            'rn|' +
-            'rs|' +
-            'rv|' +
-            's|' +
-            'sc|' +
-            'sk|' +
-            'sl|' +
-            'squ|' +
-            'ss|' +
-            'st|' +
-            't|' +
-            'th|' +
-            'v|' +
-            'y' +
-        ')' +
-        'es$' +
-    ')',
-    'g'
-);
-
-var EXPRESSION_MONOSYLLABIC_TWO = new RegExp(
-    '[aeiouy]' +
-    '(' +
-        'b|' +
-        'c|' +
-        'ch|' +
-        'd|' +
-        'dg|' +
-        'f|' +
-        'g|' +
-        'gh|' +
-        'gn|' +
-        'k|' +
-        'l|' +
-        'll|' +
-        'lv|' +
-        'm|' +
-        'mm|' +
-        'n|' +
-        'nc|' +
-        'ng|' +
-        'nn|' +
-        'p|' +
-        'r|' +
-        'rc|' +
-        'rn|' +
-        'rs|' +
-        'rv|' +
-        's|' +
-        'sc|' +
-        'sk|' +
-        'sl|' +
-        'squ|' +
-        'ss|' +
-        'st|' +
-        't|' +
-        'th|' +
-        'v|' +
-        'y|' +
-        'z' +
-    ')' +
-    'e$',
-    'g'
-);
-
-/*
- * Four expression of occurrences which normally would be
- * counted as one syllable, but should be counted as two.
- */
-
-var EXPRESSION_DOUBLE_SYLLABIC_ONE = new RegExp(
-    '(' +
-        '(' +
-            '[^aeiouy]' +
-        ')\\2l|' +
-        '[^aeiouy]ie' +
-        '(' +
-            'r|' +
-            'st|' +
-            't' +
-        ')|' +
-        '[aeiouym]bl|' +
-        'eo|' +
-        'ism|' +
-        'asm|' +
-        'thm|' +
-        'dnt|' +
-        'uity|' +
-        'dea|' +
-        'gean|' +
-        'oa|' +
-        'ua|' +
-        'eings?|' +
-        '[aeiouy]sh?e[rsd]' +
-    ')$',
-    'g'
-);
-
-var EXPRESSION_DOUBLE_SYLLABIC_TWO = new RegExp(
-    '[^gq]ua[^auieo]|' +
-    '[aeiou]{3}|' +
-    '^(' +
-        'ia|' +
-        'mc|' +
-        'coa[dglx].' +
-    ')',
-    'g'
-);
-
-var EXPRESSION_DOUBLE_SYLLABIC_THREE = new RegExp(
-    '[^aeiou]y[ae]|' +
-    '[^l]lien|' +
-    'riet|' +
-    'dien|' +
-    'iu|' +
-    'io|' +
-    'ii|' +
-    'uen|' +
-    'real|' +
-    'iell|' +
-    'eo[^aeiou]|' +
-    '[aeiou]y[aeiou]',
-    'g'
-);
-
-var EXPRESSION_DOUBLE_SYLLABIC_FOUR = /[^s]ia/;
-
-/*
- * Expression to match single syllable pre- and suffixes.
- */
-
-var EXPRESSION_SINGLE = new RegExp(
-    '^' +
-    '(' +
-        'un|' +
-        'fore|' +
-        'ware|' +
-        'none?|' +
-        'out|' +
-        'post|' +
-        'sub|' +
-        'pre|' +
-        'pro|' +
-        'dis|' +
-        'side' +
-    ')' +
-    '|' +
-    '(' +
-        'ly|' +
-        'less|' +
-        'some|' +
-        'ful|' +
-        'ers?|' +
-        'ness|' +
-        'cians?|' +
-        'ments?|' +
-        'ettes?|' +
-        'villes?|' +
-        'ships?|' +
-        'sides?|' +
-        'ports?|' +
-        'shires?|' +
-        'tion(ed)?' +
-    ')' +
-    '$',
-    'g'
-);
-
-/*
- * Expression to match double syllable pre- and suffixes.
- */
-
-var EXPRESSION_DOUBLE = new RegExp(
-    '^' +
-    '(' +
-        'above|' +
-        'anti|' +
-        'ante|' +
-        'counter|' +
-        'hyper|' +
-        'afore|' +
-        'agri|' +
-        'infra|' +
-        'intra|' +
-        'inter|' +
-        'over|' +
-        'semi|' +
-        'ultra|' +
-        'under|' +
-        'extra|' +
-        'dia|' +
-        'micro|' +
-        'mega|' +
-        'kilo|' +
-        'pico|' +
-        'nano|' +
-        'macro' +
-    ')' +
-    '|' +
-    '(' +
-        'fully|' +
-        'berry|' +
-        'woman|' +
-        'women' +
-    ')' +
-    '$',
-    'g'
-);
-
-/*
- * Expression to match triple syllable suffixes.
- */
-
-var EXPRESSION_TRIPLE = /(ology|ologist|onomy|onomist)$/g;
-
-/*
- * Expression to remove non-alphabetic characters from
- * a given value.
- */
-
-var EXPRESSION_NONALPHABETIC = /[^a-z]/g;
-
-/**
- * Get syllables in a given value.
- *
- * @param {string} value
- * @return {number}
- */
-function syllable(value) {
-    var count = 0;
-    var index;
-    var length;
-    var singular;
-    var parts;
-    var addOne;
-    var subtractOne;
-
-    value = String(value)
-        .toLowerCase()
-        .replace(EXPRESSION_NONALPHABETIC, '');
-
-    if (!value.length) {
-        return count;
-    }
-
-    /*
-     * Return early when possible.
-     */
-
-    if (value.length < 3) {
-        return 1;
-    }
-
-    /*
-     * If `value` is a hard to count, it might be
-     * in `MAP_PROBLEMATIC`.
-     */
-
-    if (has.call(MAP_PROBLEMATIC, value)) {
-        return MAP_PROBLEMATIC[value];
-    }
-
-    /*
-     * Additionally, the singular word might be
-     * in `MAP_PROBLEMATIC`.
-     */
-
-    singular = pluralize(value, 1);
-
-    if (has.call(MAP_PROBLEMATIC, singular)) {
-        return MAP_PROBLEMATIC[singular];
-    }
-
-   /**
-    * Define scoped counters, to be used
-    * in `String#replace()` calls.
-    *
-    * The scoped counter removes the matched value
-    * from the input.
-    *
-    * @param {number} addition
-    * @return {function(): string}
-    */
-    function countFactory(addition) {
-        return function () {
-            count += addition;
-
-            return '';
-        };
-    }
-
-   /**
-    * Define scoped counters, to be used
-    * in `String#replace()` calls.
-    *
-    * The scoped counter does not remove the matched
-    * value from the input.
-    *
-    * @param {number} addition
-    * @return {function(): string}
-    */
-    function returnFactory(addition) {
-        return function ($0) {
-            count += addition;
-
-            return $0;
-        };
-    }
-
-    addOne = returnFactory(1);
-    subtractOne = returnFactory(-1);
-
-    /*
-     * Count some prefixes and suffixes, and remove
-     * their matched ranges.
-     */
-
-    value = value
-        .replace(EXPRESSION_TRIPLE, countFactory(3))
-        .replace(EXPRESSION_DOUBLE, countFactory(2))
-        .replace(EXPRESSION_SINGLE, countFactory(1));
-
-    /*
-     * Count multiple consonants.
-     */
-
-    parts = value.split(/[^aeiouy]+/);
-    index = -1;
-    length = parts.length;
-
-    while (++index < length) {
-        if (parts[index] !== '') {
-            count++;
-        }
-    }
-
-    /*
-     * Subtract one for occurrences which should be
-     * counted as one (but are counted as two).
-     */
-
-    value
-        .replace(EXPRESSION_MONOSYLLABIC_ONE, subtractOne)
-        .replace(EXPRESSION_MONOSYLLABIC_TWO, subtractOne);
-
-    /*
-     * Add one for occurrences which should be counted
-     * as two (but are counted as one).
-     */
-
-    value
-        .replace(EXPRESSION_DOUBLE_SYLLABIC_ONE, addOne)
-        .replace(EXPRESSION_DOUBLE_SYLLABIC_TWO, addOne)
-        .replace(EXPRESSION_DOUBLE_SYLLABIC_THREE, addOne)
-        .replace(EXPRESSION_DOUBLE_SYLLABIC_FOUR, addOne);
-
-    /*
-     * Make sure at least on is returned.
-     */
-
-    return count || 1;
+function oninputchange() {
+  $output.textContent = $input.value.split(/\s+/g).map(syllable).reduce(sum);
 }
 
-/*
- * Expose `syllable`.
- */
+function sum(a, b) {
+  return a + b;
+}
 
-module.exports = syllable;
+},{"syllable":6}],2:[function(require,module,exports){
+var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
+var slice = Array.prototype.slice;
+var toStr = Object.prototype.toString;
+var funcType = '[object Function]';
 
-}, {"pluralize":3,"./data/problematic.json":4}],
-3: [function(require, module, exports) {
+module.exports = function bind(that) {
+    var target = this;
+    if (typeof target !== 'function' || toStr.call(target) !== funcType) {
+        throw new TypeError(ERROR_MESSAGE + target);
+    }
+    var args = slice.call(arguments, 1);
+
+    var bound;
+    var binder = function () {
+        if (this instanceof bound) {
+            var result = target.apply(
+                this,
+                args.concat(slice.call(arguments))
+            );
+            if (Object(result) === result) {
+                return result;
+            }
+            return this;
+        } else {
+            return target.apply(
+                that,
+                args.concat(slice.call(arguments))
+            );
+        }
+    };
+
+    var boundLength = Math.max(0, target.length - args.length);
+    var boundArgs = [];
+    for (var i = 0; i < boundLength; i++) {
+        boundArgs.push('$' + i);
+    }
+
+    bound = Function('binder', 'return function (' + boundArgs.join(',') + '){ return binder.apply(this,arguments); }')(binder);
+
+    if (target.prototype) {
+        var Empty = function Empty() {};
+        Empty.prototype = target.prototype;
+        bound.prototype = new Empty();
+        Empty.prototype = null;
+    }
+
+    return bound;
+};
+
+},{}],3:[function(require,module,exports){
+var implementation = require('./implementation');
+
+module.exports = Function.prototype.bind || implementation;
+
+},{"./implementation":2}],4:[function(require,module,exports){
+var bind = require('function-bind');
+
+module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
+
+},{"function-bind":3}],5:[function(require,module,exports){
+/* global define */
+
 (function (root, pluralize) {
   /* istanbul ignore else */
   if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
@@ -625,9 +98,9 @@ module.exports = syllable;
 })(this, function () {
   // Rule storage - pluralize and singularize need to be run sequentially,
   // while other rules can be optimized using an object for instant lookups.
-  var pluralRules      = [];
-  var singularRules    = [];
-  var uncountables     = {};
+  var pluralRules = [];
+  var singularRules = [];
+  var uncountables = {};
   var irregularPlurals = {};
   var irregularSingles = {};
 
@@ -681,9 +154,9 @@ module.exports = syllable;
   /**
    * Interpolate a regexp string.
    *
-   * @param  {[type]} str  [description]
-   * @param  {[type]} args [description]
-   * @return {[type]}      [description]
+   * @param  {string} str
+   * @param  {Array}  args
+   * @return {string}
    */
   function interpolate (str, args) {
     return str.replace(/\$(\d{1,2})/g, function (match, index) {
@@ -694,13 +167,14 @@ module.exports = syllable;
   /**
    * Sanitize a word by passing in the word and sanitization rules.
    *
+   * @param  {String}   token
    * @param  {String}   word
    * @param  {Array}    collection
    * @return {String}
    */
-  function sanitizeWord (word, collection) {
+  function sanitizeWord (token, word, collection) {
     // Empty string or doesn't need fixing.
-    if (!word.length || uncountables.hasOwnProperty(word)) {
+    if (!token.length || uncountables.hasOwnProperty(token)) {
       return word;
     }
 
@@ -751,7 +225,7 @@ module.exports = syllable;
       }
 
       // Run all the rules against the word.
-      return sanitizeWord(word, rules);
+      return sanitizeWord(token, word, rules);
     };
   }
 
@@ -764,8 +238,8 @@ module.exports = syllable;
    * @return {String}
    */
   function pluralize (word, count, inclusive) {
-    var pluralized = count === 1 ?
-      pluralize.singular(word) : pluralize.plural(word);
+    var pluralized = count === 1
+      ? pluralize.singular(word) : pluralize.plural(word);
 
     return (inclusive ? count + ' ' : '') + pluralized;
   }
@@ -815,7 +289,8 @@ module.exports = syllable;
    */
   pluralize.addUncountableRule = function (word) {
     if (typeof word === 'string') {
-      return uncountables[word.toLowerCase()] = true;
+      uncountables[word.toLowerCase()] = true;
+      return;
     }
 
     // Set singular and plural references for the word.
@@ -842,19 +317,22 @@ module.exports = syllable;
    */
   [
     // Pronouns.
-    ['I',        'we'],
-    ['me',       'us'],
-    ['he',       'they'],
-    ['she',      'they'],
-    ['them',     'them'],
-    ['myself',   'ourselves'],
+    ['I', 'we'],
+    ['me', 'us'],
+    ['he', 'they'],
+    ['she', 'they'],
+    ['them', 'them'],
+    ['myself', 'ourselves'],
     ['yourself', 'yourselves'],
-    ['itself',   'themselves'],
-    ['herself',  'themselves'],
-    ['himself',  'themselves'],
+    ['itself', 'themselves'],
+    ['herself', 'themselves'],
+    ['himself', 'themselves'],
     ['themself', 'themselves'],
-    ['this',     'these'],
-    ['that',     'those'],
+    ['is', 'are'],
+    ['was', 'were'],
+    ['has', 'have'],
+    ['this', 'these'],
+    ['that', 'those'],
     // Words ending in with a consonant and `o`.
     ['echo', 'echoes'],
     ['dingo', 'dingoes'],
@@ -862,32 +340,32 @@ module.exports = syllable;
     ['tornado', 'tornadoes'],
     ['torpedo', 'torpedoes'],
     // Ends with `us`.
-    ['genus',  'genera'],
+    ['genus', 'genera'],
     ['viscus', 'viscera'],
     // Ends with `ma`.
-    ['stigma',   'stigmata'],
-    ['stoma',    'stomata'],
-    ['dogma',    'dogmata'],
-    ['lemma',    'lemmata'],
-    ['schema',   'schemata'],
+    ['stigma', 'stigmata'],
+    ['stoma', 'stomata'],
+    ['dogma', 'dogmata'],
+    ['lemma', 'lemmata'],
+    ['schema', 'schemata'],
     ['anathema', 'anathemata'],
     // Other irregular rules.
-    ['ox',      'oxen'],
-    ['axe',     'axes'],
-    ['die',     'dice'],
-    ['yes',     'yeses'],
-    ['foot',    'feet'],
-    ['eave',    'eaves'],
-    ['goose',   'geese'],
-    ['tooth',   'teeth'],
-    ['quiz',    'quizzes'],
-    ['human',   'humans'],
-    ['proof',   'proofs'],
-    ['carve',   'carves'],
-    ['valve',   'valves'],
-    ['thief',   'thieves'],
-    ['genie',   'genies'],
-    ['groove',  'grooves'],
+    ['ox', 'oxen'],
+    ['axe', 'axes'],
+    ['die', 'dice'],
+    ['yes', 'yeses'],
+    ['foot', 'feet'],
+    ['eave', 'eaves'],
+    ['goose', 'geese'],
+    ['tooth', 'teeth'],
+    ['quiz', 'quizzes'],
+    ['human', 'humans'],
+    ['proof', 'proofs'],
+    ['carve', 'carves'],
+    ['valve', 'valves'],
+    ['looey', 'looies'],
+    ['thief', 'thieves'],
+    ['groove', 'grooves'],
     ['pickaxe', 'pickaxes'],
     ['whiskey', 'whiskies']
   ].forEach(function (rule) {
@@ -909,9 +387,9 @@ module.exports = syllable;
     [/(seraph|cherub)(?:im)?$/i, '$1im'],
     [/(her|at|gr)o$/i, '$1oes'],
     [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|automat|quor)(?:a|um)$/i, '$1a'],
-    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|\w+hedr)(?:a|on)$/i, '$1a'],
+    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)(?:a|on)$/i, '$1a'],
     [/sis$/i, 'ses'],
-    [/(?:(i)fe|(ar|l|ea|eo|oa|hoo)f)$/i, '$1$2ves'],
+    [/(?:(kni|wi|li)fe|(ar|l|ea|eo|oa|hoo)f)$/i, '$1$2ves'],
     [/([^aeiouy]|qu)y$/i, '$1ies'],
     [/([^ch][ieo][ln])ey$/i, '$1ies'],
     [/(x|ch|ss|sh|zz)$/i, '$1es'],
@@ -920,7 +398,8 @@ module.exports = syllable;
     [/(pe)(?:rson|ople)$/i, '$1ople'],
     [/(child)(?:ren)?$/i, '$1ren'],
     [/eaux$/i, '$0'],
-    [/m[ae]n$/i, 'men']
+    [/m[ae]n$/i, 'men'],
+    ['thou', 'you']
   ].forEach(function (rule) {
     return pluralize.addPluralRule(rule[0], rule[1]);
   });
@@ -933,12 +412,11 @@ module.exports = syllable;
     [/(ss)$/i, '$1'],
     [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(?:sis|ses)$/i, '$1sis'],
     [/(^analy)(?:sis|ses)$/i, '$1sis'],
-    [/([^aeflor])ves$/i, '$1fe'],
-    [/(hive|tive|dr?ive)s$/i, '$1'],
+    [/(wi|kni|(?:after|half|high|low|mid|non|night|[^\w]|^)li)ves$/i, '$1fe'],
     [/(ar|(?:wo|[ae])l|[eo][ao])ves$/i, '$1f'],
-    [/([^aeiouy]|qu)ies$/i, '$1y'],
-    [/(^[pl]|zomb|^(?:neck)?t|[aeo][lt]|cut)ies$/i, '$1ie'],
-    [/([^c][eor]n|smil)ies$/i, '$1ey'],
+    [/ies$/i, 'y'],
+    [/\b([pl]|zomb|(?:neck|cross)?t|coll|faer|food|gen|goon|group|lass|talk|goal|cut)ies$/i, '$1ie'],
+    [/\b(mon|smil)ies$/i, '$1ey'],
     [/(m|l)ice$/i, '$1ouse'],
     [/(seraph|cherub)im$/i, '$1'],
     [/(x|ch|ss|sh|zz|tto|go|cho|alias|[^aou]us|tlas|gas|(?:her|at|gr)o|ris)(?:es)?$/i, '$1'],
@@ -946,8 +424,8 @@ module.exports = syllable;
     [/(movie|twelve)s$/i, '$1'],
     [/(cris|test|diagnos)(?:is|es)$/i, '$1is'],
     [/(alumn|syllab|octop|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1us'],
-    [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|automat|quor)a$/i, '$1um'],
-    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|\w+hedr)a$/i, '$1on'],
+    [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|quor)a$/i, '$1um'],
+    [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)a$/i, '$1on'],
     [/(alumn|alg|vertebr)ae$/i, '$1a'],
     [/(cod|mur|sil|vert|ind)ices$/i, '$1ex'],
     [/(matr|append)ices$/i, '$1ix'],
@@ -965,12 +443,23 @@ module.exports = syllable;
   [
     // Singular words with no plurals.
     'advice',
+    'adulthood',
     'agenda',
+    'aid',
+    'alcohol',
+    'ammo',
+    'athletics',
     'bison',
+    'blood',
     'bream',
     'buffalo',
+    'butter',
     'carp',
+    'cash',
     'chassis',
+    'chess',
+    'clothing',
+    'commerce',
     'cod',
     'cooperation',
     'corps',
@@ -983,23 +472,29 @@ module.exports = syllable;
     'excretion',
     'expertise',
     'flounder',
+    'fun',
     'gallows',
+    'garbage',
     'graffiti',
     'headquarters',
     'health',
     'herpes',
     'highjinks',
     'homework',
+    'housework',
     'information',
     'jeans',
     'justice',
     'kudos',
     'labour',
+    'literature',
     'machinery',
     'mackerel',
+    'mail',
     'media',
     'mews',
     'moose',
+    'music',
     'news',
     'pike',
     'plankton',
@@ -1007,6 +502,7 @@ module.exports = syllable;
     'pollution',
     'premises',
     'rain',
+    'research',
     'rice',
     'salmon',
     'scissors',
@@ -1018,10 +514,15 @@ module.exports = syllable;
     'staff',
     'swine',
     'trout',
+    'traffic',
+    'transporation',
     'tuna',
+    'wealth',
+    'welfare',
     'whiting',
     'wildebeest',
     'wildlife',
+    'you',
     // Regexes.
     /pox$/i, // "chickpox", "smallpox"
     /ois$/i,
@@ -1035,9 +536,432 @@ module.exports = syllable;
   return pluralize;
 });
 
-}, {}],
-4: [function(require, module, exports) {
-module.exports = {
+},{}],6:[function(require,module,exports){
+/**
+ * @author Titus Wormer
+ * @copyright 2014 Titus Wormer
+ * @license MIT
+ * @module syllable
+ * @fileoverview Count syllables in English words.
+ */
+
+'use strict';
+
+/* Dependencies. */
+var has = require('has');
+var pluralize = require('pluralize');
+var problematic = require('./problematic');
+
+/* Expose. */
+module.exports = syllable;
+
+/* Two expressions of occurrences which normally would
+ * be counted as two syllables, but should be counted
+ * as one. */
+var EXPRESSION_MONOSYLLABIC_ONE = new RegExp(
+  'cia(l|$)|' +
+  'tia|' +
+  'cius|' +
+  'cious|' +
+  '[^aeiou]giu|' +
+  '[aeiouy][^aeiouy]ion|' +
+  'iou|' +
+  'sia$|' +
+  'eous$|' +
+  '[oa]gue$|' +
+  '.[^aeiuoycgltdb]{2,}ed$|' +
+  '.ely$|' +
+  '^jua|' +
+  'uai|' +
+  'eau|' +
+  '^busi$|' +
+  '(' +
+    '[aeiouy]' +
+    '(' +
+      'b|' +
+      'c|' +
+      'ch|' +
+      'dg|' +
+      'f|' +
+      'g|' +
+      'gh|' +
+      'gn|' +
+      'k|' +
+      'l|' +
+      'lch|' +
+      'll|' +
+      'lv|' +
+      'm|' +
+      'mm|' +
+      'n|' +
+      'nc|' +
+      'ng|' +
+      'nch|' +
+      'nn|' +
+      'p|' +
+      'r|' +
+      'rc|' +
+      'rn|' +
+      'rs|' +
+      'rv|' +
+      's|' +
+      'sc|' +
+      'sk|' +
+      'sl|' +
+      'squ|' +
+      'ss|' +
+      'th|' +
+      'v|' +
+      'y|' +
+      'z' +
+    ')' +
+    'ed$' +
+  ')|' +
+  '(' +
+    '[aeiouy]' +
+    '(' +
+      'b|' +
+      'ch|' +
+      'd|' +
+      'f|' +
+      'gh|' +
+      'gn|' +
+      'k|' +
+      'l|' +
+      'lch|' +
+      'll|' +
+      'lv|' +
+      'm|' +
+      'mm|' +
+      'n|' +
+      'nch|' +
+      'nn|' +
+      'p|' +
+      'r|' +
+      'rn|' +
+      'rs|' +
+      'rv|' +
+      's|' +
+      'sc|' +
+      'sk|' +
+      'sl|' +
+      'squ|' +
+      'ss|' +
+      'st|' +
+      't|' +
+      'th|' +
+      'v|' +
+      'y' +
+    ')' +
+    'es$' +
+  ')',
+  'g'
+);
+
+var EXPRESSION_MONOSYLLABIC_TWO = new RegExp(
+  '[aeiouy]' +
+  '(' +
+    'b|' +
+    'c|' +
+    'ch|' +
+    'd|' +
+    'dg|' +
+    'f|' +
+    'g|' +
+    'gh|' +
+    'gn|' +
+    'k|' +
+    'l|' +
+    'll|' +
+    'lv|' +
+    'm|' +
+    'mm|' +
+    'n|' +
+    'nc|' +
+    'ng|' +
+    'nn|' +
+    'p|' +
+    'r|' +
+    'rc|' +
+    'rn|' +
+    'rs|' +
+    'rv|' +
+    's|' +
+    'sc|' +
+    'sk|' +
+    'sl|' +
+    'squ|' +
+    'ss|' +
+    'st|' +
+    't|' +
+    'th|' +
+    'v|' +
+    'y|' +
+    'z' +
+  ')' +
+  'e$',
+  'g'
+);
+
+/* Four expression of occurrences which normally would be
+ * counted as one syllable, but should be counted as two. */
+var EXPRESSION_DOUBLE_SYLLABIC_ONE = new RegExp(
+  '(' +
+    '(' +
+      '[^aeiouy]' +
+    ')\\2l|' +
+    '[^aeiouy]ie' +
+    '(' +
+      'r|' +
+      'st|' +
+      't' +
+    ')|' +
+    '[aeiouym]bl|' +
+    'eo|' +
+    'ism|' +
+    'asm|' +
+    'thm|' +
+    'dnt|' +
+    'uity|' +
+    'dea|' +
+    'gean|' +
+    'oa|' +
+    'ua|' +
+    'eings?|' +
+    '[aeiouy]sh?e[rsd]' +
+  ')$',
+  'g'
+);
+
+var EXPRESSION_DOUBLE_SYLLABIC_TWO = new RegExp(
+  '[^gq]ua[^auieo]|' +
+  '[aeiou]{3}|' +
+  '^(' +
+    'ia|' +
+    'mc|' +
+    'coa[dglx].' +
+  ')',
+  'g'
+);
+
+var EXPRESSION_DOUBLE_SYLLABIC_THREE = new RegExp(
+  '[^aeiou]y[ae]|' +
+  '[^l]lien|' +
+  'riet|' +
+  'dien|' +
+  'iu|' +
+  'io|' +
+  'ii|' +
+  'uen|' +
+  'real|' +
+  'iell|' +
+  'eo[^aeiou]|' +
+  '[aeiou]y[aeiou]',
+  'g'
+);
+
+var EXPRESSION_DOUBLE_SYLLABIC_FOUR = /[^s]ia/;
+
+/* Expression to match single syllable pre- and suffixes. */
+var EXPRESSION_SINGLE = new RegExp(
+  '^' +
+  '(' +
+    'un|' +
+    'fore|' +
+    'ware|' +
+    'none?|' +
+    'out|' +
+    'post|' +
+    'sub|' +
+    'pre|' +
+    'pro|' +
+    'dis|' +
+    'side' +
+  ')' +
+  '|' +
+  '(' +
+    'ly|' +
+    'less|' +
+    'some|' +
+    'ful|' +
+    'ers?|' +
+    'ness|' +
+    'cians?|' +
+    'ments?|' +
+    'ettes?|' +
+    'villes?|' +
+    'ships?|' +
+    'sides?|' +
+    'ports?|' +
+    'shires?|' +
+    'tion(ed)?' +
+  ')' +
+  '$',
+  'g'
+);
+
+/* Expression to match double syllable pre- and suffixes. */
+var EXPRESSION_DOUBLE = new RegExp(
+  '^' +
+  '(' +
+    'above|' +
+    'anti|' +
+    'ante|' +
+    'counter|' +
+    'hyper|' +
+    'afore|' +
+    'agri|' +
+    'infra|' +
+    'intra|' +
+    'inter|' +
+    'over|' +
+    'semi|' +
+    'ultra|' +
+    'under|' +
+    'extra|' +
+    'dia|' +
+    'micro|' +
+    'mega|' +
+    'kilo|' +
+    'pico|' +
+    'nano|' +
+    'macro' +
+  ')' +
+  '|' +
+  '(' +
+    'fully|' +
+    'berry|' +
+    'woman|' +
+    'women' +
+  ')' +
+  '$',
+  'g'
+);
+
+/* Expression to match triple syllable suffixes. */
+var EXPRESSION_TRIPLE = /(ology|ologist|onomy|onomist)$/g;
+
+/* Expression to remove non-alphabetic characters from
+ * a given value. */
+var EXPRESSION_NONALPHABETIC = /[^a-z]/g;
+
+/**
+ * Get syllables in a given value.
+ *
+ * @param {string} value
+ * @return {number}
+ */
+function syllable(value) {
+  var count = 0;
+  var index;
+  var length;
+  var singular;
+  var parts;
+  var addOne;
+  var subtractOne;
+
+  value = String(value)
+    .toLowerCase()
+    .replace(EXPRESSION_NONALPHABETIC, '');
+
+  if (!value.length) {
+    return count;
+  }
+
+  /* Return early when possible. */
+  if (value.length < 3) {
+    return 1;
+  }
+
+  /* If `value` is a hard to count, it might be
+   * in `problematic`. */
+  if (has(problematic, value)) {
+    return problematic[value];
+  }
+
+  /* Additionally, the singular word might be
+   * in `problematic`. */
+  singular = pluralize(value, 1);
+
+  if (has(problematic, singular)) {
+    return problematic[singular];
+  }
+
+ /**
+  * Define scoped counters, to be used
+  * in `String#replace()` calls.
+  *
+  * The scoped counter removes the matched value
+  * from the input.
+  *
+  * @param {number} addition
+  * @return {function(): string}
+  */
+  function countFactory(addition) {
+    return function () {
+      count += addition;
+      return '';
+    };
+  }
+
+ /**
+  * Define scoped counters, to be used
+  * in `String#replace()` calls.
+  *
+  * The scoped counter does not remove the matched
+  * value from the input.
+  *
+  * @param {number} addition
+  * @return {function(): string}
+  */
+  function returnFactory(addition) {
+    return function ($0) {
+      count += addition;
+      return $0;
+    };
+  }
+
+  addOne = returnFactory(1);
+  subtractOne = returnFactory(-1);
+
+  /* Count some prefixes and suffixes, and remove
+   * their matched ranges. */
+  value = value
+    .replace(EXPRESSION_TRIPLE, countFactory(3))
+    .replace(EXPRESSION_DOUBLE, countFactory(2))
+    .replace(EXPRESSION_SINGLE, countFactory(1));
+
+  /* Count multiple consonants. */
+  parts = value.split(/[^aeiouy]+/);
+  index = -1;
+  length = parts.length;
+
+  while (++index < length) {
+    if (parts[index] !== '') {
+      count++;
+    }
+  }
+
+  /* Subtract one for occurrences which should be
+   * counted as one (but are counted as two). */
+  value
+    .replace(EXPRESSION_MONOSYLLABIC_ONE, subtractOne)
+    .replace(EXPRESSION_MONOSYLLABIC_TWO, subtractOne);
+
+  /* Add one for occurrences which should be counted
+   * as two (but are counted as one). */
+  value
+    .replace(EXPRESSION_DOUBLE_SYLLABIC_ONE, addOne)
+    .replace(EXPRESSION_DOUBLE_SYLLABIC_TWO, addOne)
+    .replace(EXPRESSION_DOUBLE_SYLLABIC_THREE, addOne)
+    .replace(EXPRESSION_DOUBLE_SYLLABIC_FOUR, addOne);
+
+  /* Make sure at least on is returned. */
+  return count || 1;
+}
+
+},{"./problematic":7,"has":4,"pluralize":5}],7:[function(require,module,exports){
+module.exports={
   "abalone": 4,
   "abare": 3,
   "abed": 2,
@@ -1087,5 +1011,5 @@ module.exports = {
   "phoebe": 2,
   "zoe": 2
 }
-;
-}, {}]}, {}, {"1":""})
+
+},{}]},{},[1]);
