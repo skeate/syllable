@@ -5,7 +5,7 @@
     "syllable": "^2.1.0"
   },
   "devDependencies": {
-    "browserify": "^13.1.1"
+    "browserify": "^14.0.0"
   },
   "scripts": {
     "build": "browserify index.js > build.js"
