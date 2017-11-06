@@ -82,16 +82,6 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
   var irregularSingles = {};
 
   /**
-   * Title case a string.
-   *
-   * @param  {string} str
-   * @return {string}
-   */
-  function toTitleCase (str) {
-    return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
-  }
-
-  /**
    * Sanitize a pluralization rule to a usable regular expression.
    *
    * @param  {(RegExp|string)} rule
@@ -115,18 +105,14 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
    */
   function restoreCase (word, token) {
     // Tokens are an exact match.
-    if (word === token) {
-      return token;
-    }
+    if (word === token) return token;
 
     // Upper cased words. E.g. "HELLO".
-    if (word === word.toUpperCase()) {
-      return token.toUpperCase();
-    }
+    if (word === word.toUpperCase()) return token.toUpperCase();
 
     // Title cased words. E.g. "Title".
     if (word[0] === word[0].toUpperCase()) {
-      return toTitleCase(token);
+      return token.charAt(0).toUpperCase() + token.substr(1).toLowerCase();
     }
 
     // Lower cased words. E.g. "test".
@@ -147,37 +133,45 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
   }
 
   /**
+   * Replace a word using a rule.
+   *
+   * @param  {string} word
+   * @param  {Array}  rule
+   * @return {string}
+   */
+  function replace (word, rule) {
+    return word.replace(rule[0], function (match, index) {
+      var result = interpolate(rule[1], arguments);
+
+      if (match === '') {
+        return restoreCase(word[index - 1], result);
+      }
+
+      return restoreCase(match, result);
+    });
+  }
+
+  /**
    * Sanitize a word by passing in the word and sanitization rules.
    *
    * @param  {string}   token
    * @param  {string}   word
-   * @param  {Array}    collection
+   * @param  {Array}    rules
    * @return {string}
    */
-  function sanitizeWord (token, word, collection) {
+  function sanitizeWord (token, word, rules) {
     // Empty string or doesn't need fixing.
     if (!token.length || uncountables.hasOwnProperty(token)) {
       return word;
     }
 
-    var len = collection.length;
+    var len = rules.length;
 
     // Iterate over the sanitization rules and use the first one to match.
     while (len--) {
-      var rule = collection[len];
+      var rule = rules[len];
 
-      // If the rule passes, return the replacement.
-      if (rule[0].test(word)) {
-        return word.replace(rule[0], function (match, index, word) {
-          var result = interpolate(rule[1], arguments);
-
-          if (match === '') {
-            return restoreCase(word[index - 1], result);
-          }
-
-          return restoreCase(match, result);
-        });
-      }
+      if (rule[0].test(word)) return replace(word, rule);
     }
 
     return word;
@@ -212,6 +206,20 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
   }
 
   /**
+   * Check if a word is part of the map.
+   */
+  function checkWord (replaceMap, keepMap, rules, bool) {
+    return function (word) {
+      var token = word.toLowerCase();
+
+      if (keepMap.hasOwnProperty(token)) return true;
+      if (replaceMap.hasOwnProperty(token)) return false;
+
+      return sanitizeWord(token, token, rules) === token;
+    };
+  }
+
+  /**
    * Pluralize or singularize a word based on the passed in count.
    *
    * @param  {string}  word
@@ -236,11 +244,29 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
   );
 
   /**
+   * Check if a word is plural.
+   *
+   * @type {Function}
+   */
+  pluralize.isPlural = checkWord(
+    irregularSingles, irregularPlurals, pluralRules
+  );
+
+  /**
    * Singularize a word.
    *
    * @type {Function}
    */
   pluralize.singular = replaceWord(
+    irregularPlurals, irregularSingles, singularRules
+  );
+
+  /**
+   * Check if a word is singular.
+   *
+   * @type {Function}
+   */
+  pluralize.isSingular = checkWord(
     irregularPlurals, irregularSingles, singularRules
   );
 
@@ -393,8 +419,6 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
   [
     [/s$/i, ''],
     [/(ss)$/i, '$1'],
-    [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(?:sis|ses)$/i, '$1sis'],
-    [/(^analy)(?:sis|ses)$/i, '$1sis'],
     [/(wi|kni|(?:after|half|high|low|mid|non|night|[^\w]|^)li)ves$/i, '$1fe'],
     [/(ar|(?:wo|[ae])l|[eo][ao])ves$/i, '$1f'],
     [/ies$/i, 'y'],
@@ -403,9 +427,9 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
     [/(m|l)ice$/i, '$1ouse'],
     [/(seraph|cherub)im$/i, '$1'],
     [/(x|ch|ss|sh|zz|tto|go|cho|alias|[^aou]us|tlas|gas|(?:her|at|gr)o|ris)(?:es)?$/i, '$1'],
-    [/(e[mn]u)s?$/i, '$1'],
-    [/(movie|twelve)s$/i, '$1'],
-    [/(cris|test|diagnos)(?:is|es)$/i, '$1is'],
+    [/(analy|ba|diagno|parenthe|progno|synop|the|empha|cri)(?:sis|ses)$/i, '$1sis'],
+    [/(movie|twelve|abuse|e[mn]u)s$/i, '$1'],
+    [/(test)(?:is|es)$/i, '$1is'],
     [/(alumn|syllab|octop|vir|radi|nucle|fung|cact|stimul|termin|bacill|foc|uter|loc|strat)(?:us|i)$/i, '$1us'],
     [/(agend|addend|millenni|dat|extrem|bacteri|desiderat|strat|candelabr|errat|ov|symposi|curricul|quor)a$/i, '$1um'],
     [/(apheli|hyperbat|periheli|asyndet|noumen|phenomen|criteri|organ|prolegomen|hedr|automat)a$/i, '$1on'],
@@ -425,13 +449,15 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
    */
   [
     // Singular words with no plurals.
-    'advice',
     'adulthood',
+    'advice',
     'agenda',
     'aid',
     'alcohol',
     'ammo',
+    'anime',
     'athletics',
+    'audio',
     'bison',
     'blood',
     'bream',
@@ -442,16 +468,16 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
     'chassis',
     'chess',
     'clothing',
-    'commerce',
     'cod',
+    'commerce',
     'cooperation',
     'corps',
-    'digestion',
     'debris',
     'diabetes',
+    'digestion',
+    'elk',
     'energy',
     'equipment',
-    'elk',
     'excretion',
     'expertise',
     'flounder',
@@ -478,6 +504,7 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
     'mews',
     'moose',
     'music',
+    'manga',
     'news',
     'pike',
     'plankton',
@@ -497,9 +524,9 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
     'staff',
     'swine',
     'tennis',
-    'trout',
     'traffic',
     'transporation',
+    'trout',
     'tuna',
     'wealth',
     'welfare',
@@ -508,13 +535,13 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
     'wildlife',
     'you',
     // Regexes.
-    /pox$/i, // "chickpox", "smallpox"
-    /ois$/i,
+    /[^aeiou]ese$/i, // "chinese", "japanese"
     /deer$/i, // "deer", "reindeer"
     /fish$/i, // "fish", "blowfish", "angelfish"
-    /sheep$/i,
     /measles$/i,
-    /[^aeiou]ese$/i // "chinese", "japanese"
+    /o[iu]s$/i, // "carnivorous"
+    /pox$/i, // "chickpox", "smallpox"
+    /sheep$/i
   ].forEach(pluralize.addUncountableRule);
 
   return pluralize;
@@ -523,12 +550,10 @@ module.exports={"105":"i","192":"A","193":"A","194":"A","195":"A","196":"A","197
 },{}],5:[function(require,module,exports){
 'use strict';
 
-/* Dependencies. */
 var pluralize = require('pluralize');
 var normalize = require('normalize-strings');
-var problematic = require('./problematic');
+var problematic = require('./problematic.json');
 
-/* Expose. */
 module.exports = syllables;
 
 var own = {}.hasOwnProperty;
@@ -850,7 +875,7 @@ function syllable(value) {
   var addOne;
   var subtractOne;
 
-  if (!value.length) {
+  if (value.length === 0) {
     return count;
   }
 
@@ -936,7 +961,7 @@ function syllable(value) {
   }
 }
 
-},{"./problematic":6,"normalize-strings":3,"pluralize":4}],6:[function(require,module,exports){
+},{"./problematic.json":6,"normalize-strings":3,"pluralize":4}],6:[function(require,module,exports){
 module.exports={
   "abalone": 4,
   "abare": 3,

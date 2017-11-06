@@ -2,7 +2,7 @@
   "name": "syllable-www",
   "private": true,
   "dependencies": {
-    "syllable": "^2.1.0"
+    "syllable": "^3.0.0"
   },
   "devDependencies": {
     "browserify": "^14.0.0"
