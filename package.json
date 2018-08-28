@@ -5,9 +5,10 @@
     "syllable": "^3.0.0"
   },
   "devDependencies": {
-    "browserify": "^14.0.0"
+    "browserify": "^16.0.0",
+    "tinyify": "^2.4.3"
   },
   "scripts": {
-    "build": "browserify index.js > build.js"
+    "build": "browserify . -p tinyify > build.js"
   }
 }
